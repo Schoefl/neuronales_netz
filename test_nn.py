@@ -25,15 +25,15 @@ mat = loadmat('mnist.mat')
 # mat = spio.loadmat('mnist.mat', squeeze_me=False)#, mat_dtype="double")
 
 #trainX = np.matrix.transpose((np.asarray(mat['trainX'])/255))[:,1:4]
-trainX = convertXData(mat['trainX'])[:,0:100]
-trainY = convertYData(mat['trainY'])[:,0:100]
+trainX = convertXData(mat['trainX'])[:,0:10]
+trainY = convertYData(mat['trainY'])[:,0:10]
 
 # print(trainX.shape(), trainY.shape())
 # tmp1 = trainX[:,0]
 # tmp2 = trainX[:,2]
 # print(tmp1[tmp1!=0])
 # print(tmp2[tmp2!=0])
-print(all(trainX[:,0]==trainX[:,1]))
+# print(all(trainX[:,0]==trainX[:,1]))
 # print(all(trainY[:,0]==trainY[:,2]))
 
 
