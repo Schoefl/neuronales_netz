@@ -1,9 +1,9 @@
 import scipy.io as spio
 import numpy as np
+import pandas as pd
 
 from mat4py import loadmat
 from nn import NeuronalNet
-
 
 def convertYData(y):
     y = np.array(y, dtype=int)
@@ -14,29 +14,44 @@ def convertYData(y):
 
 def convertXData(x):
     max_val = 255
-    ret_val = np.matrix.transpose((np.asarray(mat['trainX'])/max_val))
+    ret_val = np.matrix.transpose(np.array(x, dtype=float)/max_val)
     return ret_val
 
+excel_file = 'nn_stats.xlsx'
+stats = pd.DataFrame(columns=["hidden layers", "neurons per hidden layer", "activation function", "mini patch size", 
+"size of training sample", "CONVERGENCE AFTER . STEPS", "PERCENT OF CORRECT PREDICTIONS"])
+stats.to_excel(excel_file, index=False)
+
+hl = [1,2]
+nphl = [700, 1000]
+sots = 59999*np.array([1/3,2/3,1])
+af = ["sigmoid", "relu"]
+mps = [1,5,10]
 
 mat = loadmat('mnist.mat')
-# test = np.zeros((784,2))
-# test = np.matrix.transpose((np.asarray(mat['trainX'])/255))[:,0:1]
-# print(test[test!=0])
-# mat = spio.loadmat('mnist.mat', squeeze_me=False)#, mat_dtype="double")
+testX = convertXData(mat['testX'])
+testY = convertYData(mat['testY'])
 
-#trainX = np.matrix.transpose((np.asarray(mat['trainX'])/255))[:,1:4]
-trainX = convertXData(mat['trainX'])[:,0:10]
-trainY = convertYData(mat['trainY'])[:,0:10]
+for h in hl:
+    for n in nphl:
+        for s in sots:
+            trainX = convertXData(mat['trainX'])[:,0:round(s)]
+            trainY = convertYData(mat['trainY'])[:,0:round(s)]
+            net = NeuronalNet(amount_input_neurons=trainX.shape[0], amount_hidden_neurons=n,
+                amount_output_neurons=trainY.shape[0], hidden_layers=h)
+            for a in af:
+                net.af = a
+                for m in mps:
+                    net.mini_patch_size = m
+                    tmp = net.train(trainX, trainY)
+                    if tmp[0]:
+                        steps=tmp[1]
+                    else:
+                        steps = "did not converge"
+                    success = net.test(testX, testY)
+                    stats = pd.read_excel(excel_file)
+                    stats.loc[len(stats)] = [h,n,a,m,s,steps,success]
+                    stats.to_excel(excel_file, index=False)
+                    print("results saved to excel")
 
-# print(trainX.shape(), trainY.shape())
-# tmp1 = trainX[:,0]
-# tmp2 = trainX[:,2]
-# print(tmp1[tmp1!=0])
-# print(tmp2[tmp2!=0])
-# print(all(trainX[:,0]==trainX[:,1]))
-# print(all(trainY[:,0]==trainY[:,2]))
 
-
-net = NeuronalNet(amount_input_neurons=trainX.shape[0], amount_hidden_neurons=round(trainX.shape[0]), amount_output_neurons=trainY.shape[0])
-net.train(trainX, trainY)
-#net.test(trainX)
