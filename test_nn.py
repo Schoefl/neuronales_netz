@@ -24,9 +24,9 @@ stats.to_excel(excel_file, index=False)
 
 hl = [1,2]
 nphl = [700, 1000]
-sots = 59999*np.array([1/3,2/3,1])
+sots = [600, 6000, 60000]
 af = ["sigmoid", "relu"]
-mps = [1,5,10]
+mps = [5,1,10]
 
 mat = loadmat('mnist.mat')
 testX = convertXData(mat['testX'])
@@ -35,12 +35,12 @@ testY = convertYData(mat['testY'])
 for h in hl:
     for n in nphl:
         for s in sots:
-            trainX = convertXData(mat['trainX'])[:,0:round(s)]
-            trainY = convertYData(mat['trainY'])[:,0:round(s)]
+            trainX = convertXData(mat['trainX'])[:,0:s]
+            trainY = convertYData(mat['trainY'])[:,0:s]
             net = NeuronalNet(amount_input_neurons=trainX.shape[0], amount_hidden_neurons=n,
                 amount_output_neurons=trainY.shape[0], hidden_layers=h)
             for a in af:
-                net.af = a
+                net.activation_function = a
                 for m in mps:
                     net.mini_patch_size = m
                     tmp = net.train(trainX, trainY)
@@ -52,6 +52,6 @@ for h in hl:
                     stats = pd.read_excel(excel_file)
                     stats.loc[len(stats)] = [h,n,a,m,s,steps,success]
                     stats.to_excel(excel_file, index=False)
-                    print("results saved to excel")
-
+                    print("results saved in file", excel_file)
+                    net.reset()
 
