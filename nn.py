@@ -15,9 +15,11 @@ class NeuronalNet:
 
         ## changeable parameters, public-like
         self.activation_function = "sigmoid"             
-        self.mini_patch_size = 1        
+        self.mini_patch_size = 5        
         self.success_percentage = 0.98 # what percentage of training samples must be classified correctly
         self.mse_th = 0.0001           # minimum mean squared error to change weights and biases
+        self.learning_rate = 0.5       # learning rate if not dynamically changed in case of divergence
+        self.max_steps = 5000          # maximum amout of epochs
 
         ## initialize weights, biases and dynamically changing parameters
         self.reset()       
@@ -95,8 +97,8 @@ class NeuronalNet:
         ## if mean of errors is greater than error threshold (mse_th), update weights and biases
         if mean_mse/x.shape[1] > self.mse_th:
             for i in range(0, len(self.__w)):
-                self.__w[i] -= self.__learning_rate*delta_w[i]/x.shape[1]
-                self.__b[i] -= self.__learning_rate*delta_b[i]/x.shape[1]
+                self.__w[i] -= self.__lr*delta_w[i]/x.shape[1]
+                self.__b[i] -= self.__lr*delta_b[i]/x.shape[1]
 
         ## make sure self.__feedForward(x), self.__backPropagation(y) are not called in wrong context
         self.__a = None
@@ -132,9 +134,9 @@ class NeuronalNet:
         self.__a = None
         self.__z = None
         self.__delta = None 
-        self.__learning_rate = None
+        self.__lr = None
 
-    def train(self, x, y, max_steps=5000):
+    def train(self, x, y):
         """
         input:
           - x: numpy array with dimensions (amount_input_neurons, sample size), input for net
@@ -146,11 +148,12 @@ class NeuronalNet:
         ## note that numpy arrays are passed by reference, so passing x,y as often as I do it here is not inefficient
         assert(x.shape[0]==self.__ain and y.shape[0]==self.__aon and x.shape[1]==y.shape[1] and x.shape[1]!=0), "invalid input in train"
         converged = False
-        self.__learning_rate = 0.5
+        self.__lr = self.learning_rate
         sp_tmp = 0
         sp_cnt = 0
 
-        for steps in range(0, max_steps):
+
+        for steps in range(0, self.max_steps):
             patch = range(0, x.shape[1], min(self.mini_patch_size, x.shape[1]-1))
             mean_sc = 0
             ## split data into mini patches and fit w, b to input and output data of it
@@ -159,9 +162,6 @@ class NeuronalNet:
             print("percentage of correctly predicted numbers after {} steps:".format(steps+1),float(mean_sc)/x.shape[1]*100)
             mean_sc = float(mean_sc)/x.shape[1]
 
-            ## change learning rate depending on success rate
-            if mean_sc >= .90:
-                self.__learning_rate = 0.1
             ## count how often success rate doesn't change
             if mean_sc == sp_tmp: sp_cnt+=1
             else: sp_cnt=0
@@ -174,7 +174,7 @@ class NeuronalNet:
                 converged = False
                 break
             elif sp_cnt >=20: # slow down learning rate if nothing is changing
-                self.__learning_rate = 0.1
+                self.__lr = 0.1
         
         print("stopped after {} steps".format(steps+1))
         return [converged, steps]

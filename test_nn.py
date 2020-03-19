@@ -17,14 +17,14 @@ def convertXData(x):
     ret_val = np.matrix.transpose(np.array(x, dtype=float)/max_val)
     return ret_val
 
-excel_file = 'nn_stats_.xlsx'
+excel_file = 'nn_stats.xlsx'
 stats = pd.DataFrame(columns=["hidden layers", "neurons per hidden layer", "activation function", "mini patch size", 
 "size of training sample", "CONVERGENCE AFTER . STEPS", "PERCENT OF CORRECT PREDICTIONS"])
 stats.to_excel(excel_file, index=False)
 
-hl = [1,2]
+hl = [1, 2]
 nphl = [700, 1000]
-sots = [600, 6000, 60000, 10, 100, 300]
+sots = [100, 300, 600, 6000, 60000]
 af = ["sigmoid", "relu"]
 mps = [5,1,10]
 
